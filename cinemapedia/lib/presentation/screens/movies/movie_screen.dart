@@ -1,3 +1,4 @@
+import 'package:cinemapedia/presentation/providers/storage/local_storage_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -175,25 +176,54 @@ class _ActorsByMovie extends ConsumerWidget {
   }
 }
 
-class _CustomSliverAppBar extends StatelessWidget {
+final isFavoriteProvider =
+    FutureProvider.family.autoDispose((ref, int movieId) {
+  final localStorageRepository = ref.watch(localStorageRepositoryProvider);
+  return localStorageRepository.isMovieFavorite(movieId);
+});
+
+class _CustomSliverAppBar extends ConsumerWidget {
   final Movie movie;
   const _CustomSliverAppBar({required this.movie});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, ref) {
     final size = MediaQuery.of(context).size;
+    final isFavoriteFuture = ref.watch(isFavoriteProvider(movie.id));
 
     return SliverAppBar(
-      backgroundColor: Colors.black,
       expandedHeight: size.height * 0.7,
-      foregroundColor: Colors.white,
+      iconTheme: IconThemeData(
+        color: Colors.white,
+        shadows: List.generate(
+            5,
+            (index) => const Shadow(
+                  blurRadius: 2,
+                  color: Colors.black,
+                )),
+      ),
+      actions: [
+        IconButton(
+          onPressed: () {
+            // ref.watch(localStorageRepositoryProvider).toggleFavorite(movie);
+            ref.read(favoriteMoviesProvider.notifier).toggleFavorite(movie);
+          },
+          icon: isFavoriteFuture.when(
+            data: (isFavorite) {
+              ref.invalidate(isFavoriteProvider(movie.id));
+
+              if (isFavorite) {
+                return const Icon(Icons.favorite_rounded, color: Colors.red);
+              }
+              return const Icon(Icons.favorite_border);
+            },
+            error: (_, __) => throw UnimplementedError(),
+            loading: () => const SizedBox(),
+          ),
+        ),
+      ],
       flexibleSpace: FlexibleSpaceBar(
         titlePadding: const EdgeInsets.all(10),
-        // title: Text(
-        //   movie.title,
-        //   style: const TextStyle(fontSize: 20),
-        //   textAlign: TextAlign.start,
-        // ),
         background: Stack(
           children: [
             SizedBox.expand(
@@ -202,29 +232,30 @@ class _CustomSliverAppBar extends StatelessWidget {
                 fit: BoxFit.cover,
               ),
             ),
-            const SizedBox.expand(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    stops: [0.7, 1.0],
-                    colors: [Colors.transparent, Colors.black87],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox.expand(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    stops: [0.0, 0.2],
-                    colors: [Colors.black87, Colors.transparent],
-                  ),
-                ),
-              ),
-            ),
+            // const SizedBox.expand(
+            //   child: DecoratedBox(
+            //     decoration: BoxDecoration(
+            //       gradient: LinearGradient(
+            //         begin: Alignment.topCenter,
+            //         end: Alignment.bottomCenter,
+            //         stops: [0.7, 1.0],
+            //         colors: [Colors.transparent, Colors.black87],
+            //       ),
+            //     ),
+            //   ),
+            // ),
+            // const SizedBox.expand(
+            //   child: DecoratedBox(
+            //     decoration: BoxDecoration(
+            //       gradient: LinearGradient(
+            //         begin: Alignment.topCenter,
+            //         end: Alignment.bottomCenter,
+            //         stops: [0.0, 0.2],
+            //         colors: [Colors.black87, Colors.transparent],
+            //       ),
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ),
