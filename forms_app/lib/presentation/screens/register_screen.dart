@@ -36,22 +36,17 @@ class _RegisterView extends StatelessWidget {
   }
 }
 
-class _RegisterForm extends StatefulWidget {
+class _RegisterForm extends StatelessWidget {
   const _RegisterForm();
-
-  @override
-  State<_RegisterForm> createState() => _RegisterFormState();
-}
-
-class _RegisterFormState extends State<_RegisterForm> {
-  final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
     final registerCubit = context.watch<RegisterCubit>();
+    final username = registerCubit.state.username;
+    final email = registerCubit.state.email;
+    final password = registerCubit.state.password;
 
     return Form(
-      key: _formKey,
       child: Wrap(
         runSpacing: 15,
         alignment: WrapAlignment.center,
@@ -61,45 +56,22 @@ class _RegisterFormState extends State<_RegisterForm> {
           CustomTextFormField(
             label: 'Nombre de usuario',
             onChanged: registerCubit.usernameChanged,
-            validator: (value) {
-              if (value == null || value.isEmpty) return 'Campo requerido';
-              if (value.trim().isEmpty) return 'Campo requerido';
-              if (value.length < 6) return 'Más de 6 letras';
-              return null;
-            },
+            errorMessage: username.errorMessage,
           ),
           CustomTextFormField(
             label: 'Correo electrónico',
             onChanged: registerCubit.emailChanged,
-            validator: (value) {
-              if (value == null || value.isEmpty) return 'Campo requerido';
-              if (value.trim().isEmpty) return 'Campo requerido';
-
-              final emailRegExp = RegExp(
-                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-              );
-              if (!emailRegExp.hasMatch(value)) {
-                return 'No tiene formato de correo';
-              }
-              return null;
-            },
+            errorMessage: email.errorMessage,
           ),
           CustomTextFormField(
             label: 'Contraseña',
             obscureText: true,
             onChanged: registerCubit.passwordChanged,
-            validator: (value) {
-              if (value == null || value.isEmpty) return 'Campo requerido';
-              if (value.trim().isEmpty) return 'Campo requerido';
-              if (value.length < 6) return 'Más de 6 letras';
-              return null;
-            },
+            errorMessage: password.errorMessage,
           ),
           // Submit
           FilledButton.tonalIcon(
             onPressed: () {
-              final isValid = _formKey.currentState!.validate();
-              if (!isValid) return;
               registerCubit.onSubmit();
             },
             icon: const Icon(Icons.save),
